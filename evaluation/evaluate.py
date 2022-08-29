@@ -33,47 +33,34 @@ if __name__ == '__main__':
     #output_path = '/data1/liguanlin/research_projects/DPM/Palette-Image-to-Image-Diffusion-Models/experiments/test_harmonization_day2night_220514_102412/results/test/0/'
     #output_path = '/data1/liguanlin/research_projects/DPM/Palette-Image-to-Image-Diffusion-Models/experiments/test_harmonization_day2night_220514_150437/results/test/0/'
     #output_path = '/data1/liguanlin/research_projects/DPM/Palette-Image-to-Image-Diffusion-Models/experiments/test_harmonization_day2night_220527_165832/results/test/0/'
-    output_path = '/data1/liguanlin/research_projects/DPM/Palette-Image-to-Image-Diffusion-Models/experiments/test_harmonization_day2night_improved_220803_153028/results/test/0/'
+    output_path = '/data1/liguanlin/research_projects/lowlight/LLDPM/experiments/test_lowlight_dpm_220829_145658/results/test/0/'
 
 
 
 
-    files = '/data1/liguanlin/Datasets/iHarmony/Hday2night/Hday2night_test.txt'
-    #files = '/mnt/cfs/liguanlin/Datasets/iHarmony4/HFlickr/HFlickr_test.txt'
-    #files = '/mnt/cfs/liguanlin/Datasets/iHarmony4/HCOCO/HCOCO_test.txt'
-    #files = '/mnt/cfs/liguanlin/Datasets/iHarmony4/HAdobe5k/HAdobe5k_test.txt'
-    with open(files,'r') as f:
-            for line in f.readlines():
-                name_str = line.rstrip()
-                
-                harmonized_img_name = 'Out_' + name_str
-                harmonized_path = os.path.join(output_path, harmonized_img_name)
-                
-                real_img_name = 'In_' + name_str
-                real_path = os.path.join(output_path, real_img_name)
+    lowlight_file_path = '/data1/liguanlin/Datasets/lowlight/eval15/low/'
+    files = os.listdir(lowlight_file_path)
 
-                name_parts=name_str.split('_')
-                mask_img_name = name_str.replace(('_'+name_parts[-1]),'.png')
+    for line in files:
+        name_str = line.rstrip()
+        
+        harmonized_img_name = 'Out_' + name_str
+        harmonized_path = os.path.join(output_path, harmonized_img_name)
+        
+        real_img_name = 'In_' + name_str
+        real_path = os.path.join(output_path, real_img_name)
 
-                mask_path = '/data1/liguanlin/Datasets/iHarmony/Hday2night/masks/' + mask_img_name
-
-                real_paths.append(real_path)
-                harmonized_paths.append(harmonized_path)
-                mask_paths.append(mask_path)
+        real_paths.append(real_path)
+        harmonized_paths.append(harmonized_path)
 
     mse_scores = 0
     psnr_scores = 0
     ssim_scores = 0
-    image_size = 256
-    fmse_scores = 0
-    fpsnr_scores = 0
-    fssim_scores = 0
 
-    fore_area_count = 0
-    fmse_score_list = []
+
+
 
     count = 0
-    ssim_window_default_size = 11
     for i, harmonized_path in enumerate(tqdm(harmonized_paths)):
         count += 1
 
@@ -91,33 +78,10 @@ if __name__ == '__main__':
         mse_scores += mse_score
         ssim_scores += ssim_score
 
-        """下面分别计算fmse, fpsnr和fssim"""
-        mask = Image.open(mask_paths[i]).convert('1') #获取mask区域。
-        mask = tf.resize(mask, [image_size,image_size], interpolation=Image.BICUBIC)
-
-        mask = tf.to_tensor(mask).unsqueeze(0).cuda()
-        harmonized = tf.to_tensor(harmonized_np).unsqueeze(0).cuda()
-        real = tf.to_tensor(real_np).unsqueeze(0).cuda()
-
-        fore_area = torch.sum(mask)
-        fmse_score = torch.nn.functional.mse_loss(harmonized*mask,real*mask)*256*256/fore_area #计算得到fmse        
-        fmse_score = fmse_score.item()
-
-        fpsnr_score = 10 * np.log10((255 ** 2) / fmse_score) #计算得到fpsnr
-        
-        ssim_score, fssim_score = pytorch_ssim.ssim(harmonized, real, window_size=ssim_window_default_size, mask=mask) #计算得到fssim
-        fmse_scores += fmse_score
-        fpsnr_scores += fpsnr_score
-        fssim_scores += fssim_score
-
-
     mse_scores_mu = mse_scores/count
     psnr_scores_mu = psnr_scores/count
     ssim_scores_mu = ssim_scores/count
-    fpsnr_scores_mu = fpsnr_scores/count
-    fmse_scores_mu = fmse_scores/count
-    fssim_score_mu = fssim_scores/count
 
     print(count)
-    mean_sore = "MSE %0.2f | PSNR %0.2f | SSIM %0.3f |fMSE %0.2f | fPSNR %0.2f | fSSIM %0.4f" % (mse_scores_mu, psnr_scores_mu, ssim_scores_mu,fmse_scores_mu,fpsnr_scores_mu,fssim_score_mu)
+    mean_sore = "MSE %0.2f | PSNR %0.2f | SSIM %0.3f " % (mse_scores_mu, psnr_scores_mu, ssim_scores_mu)
     print(mean_sore)    
