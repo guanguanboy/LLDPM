@@ -160,11 +160,11 @@ class Network(BaseNetwork):
     @torch.no_grad()
     def restoration(self, y_cond, y_t=None, y_0=None, sample_num=8): #采样过程，类似于IDDPM中的源码p_sample_loop
         b, *_ = y_cond.shape
-
+        b, channel, height, width = y_cond.shape
         assert self.time_step_respacing > sample_num, 'num_timesteps must greater than sample_num'
         sample_inter = (self.time_step_respacing//sample_num)
         
-        y_t = default(y_t, lambda: torch.randn_like(y_cond))
+        y_t = default(y_t, lambda: torch.randn(size= (b, 3, height, width), dtype=y_cond.dtype, layout=y_cond.layout, device=y_cond.device))
         ret_arr = y_t
         for i in tqdm(reversed(range(0, self.time_step_respacing)), desc='sampling loop time step', total=self.time_step_respacing):
             t = torch.full((b,), i, device=y_cond.device, dtype=torch.long)

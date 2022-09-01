@@ -111,8 +111,8 @@ class LLDPM(BaseModel):
                 for key, value in self.train_metrics.result().items():
                     self.logger.info('{:5s}: {}\t'.format(str(key), value))
                     self.writer.add_scalar(key, value)
-                for key, value in self.get_current_visuals().items():
-                    self.writer.add_images(key, value)
+                #for key, value in self.get_current_visuals().items():
+                    #self.writer.add_images(key, value)
             if self.ema_scheduler is not None:
                 if self.iter % self.ema_scheduler['ema_iter'] == 0 and self.iter > self.ema_scheduler['ema_start']:
                     self.logger.info('Update the EMA  model at the iter {:.0f}'.format(self.iter))
@@ -130,7 +130,7 @@ class LLDPM(BaseModel):
                 self.set_input(val_data)
                 if self.opt['distributed']:
                     if self.task in ['inpainting','uncropping']:
-                        self.output, self.visuals = self.netG.module.restoration(self.cond_image, y_t=self.cond_image, 
+                        self.output, self.visuals = self.netG.module.restoration(self.cond_image, y_t=None, 
                             y_0=self.gt_image, sample_num=self.sample_num)
                     else:
                         self.output, self.visuals = self.netG.module.restoration(self.cond_image, sample_num=self.sample_num)
@@ -144,14 +144,14 @@ class LLDPM(BaseModel):
                 self.iter += self.batch_size
                 self.writer.set_iter(self.epoch, self.iter, phase='val')
 
-                for met in self.metrics:
-                    key = met.__name__
-                    value = met(self.cond_image, self.output)
-                    self.val_metrics.update(key, value)
-                    self.writer.add_scalar(key, value)
-                for key, value in self.get_current_visuals(phase='val').items():
-                    self.writer.add_images(key, value)
-                self.writer.save_images(self.save_current_results())
+                #for met in self.metrics:
+                #    key = met.__name__
+                #    value = met(self.cond_image[:,:3,:,:], self.output)
+                #    self.val_metrics.update(key, value)
+                #    self.writer.add_scalar(key, value)
+                #for key, value in self.get_current_visuals(phase='val').items():
+                #    self.writer.add_images(key, value)
+                #self.writer.save_images(self.save_current_results())
 
         return self.val_metrics.result()
 
@@ -162,25 +162,27 @@ class LLDPM(BaseModel):
             self.set_input(phase_data)
             if self.opt['distributed']:
                 if self.task in ['inpainting','uncropping']:
-                    self.output, self.visuals = self.netG.module.restoration(self.cond_image, y_t=self.cond_image, 
+                    self.output, self.visuals = self.netG.module.restoration(self.cond_image, y_t=None, 
                         y_0=self.gt_image, sample_num=self.sample_num)
                 else:
                     self.output, self.visuals = self.netG.module.restoration(self.cond_image, sample_num=self.sample_num)
             else:
                 if self.task in ['inpainting','uncropping']:
-                    self.output, self.visuals = self.netG.restoration(self.cond_image, y_t=self.cond_image, 
+                    self.output, self.visuals = self.netG.restoration(self.cond_image, y_t=None, 
                         y_0=self.gt_image, sample_num=self.sample_num)
                 else:
                     self.output, self.visuals = self.netG.restoration(self.cond_image, sample_num=self.sample_num)
                     
             self.iter += self.batch_size
             self.writer.set_iter(self.epoch, self.iter, phase='test')
-            for met in self.metrics:
-                key = met.__name__
-                value = met(self.cond_image, self.output)
-                self.val_metrics.update(key, value)
-                self.writer.add_scalar(key, value)
+            #for met in self.metrics:
+            #    key = met.__name__
+            #    value = met(self.cond_image, self.output)
+            #    self.val_metrics.update(key, value)
+            #    self.writer.add_scalar(key, value)
             for key, value in self.get_current_visuals(phase='val').items():
+                if key == 'cond_image':
+                    value = value[:,:3,:,:]
                 self.writer.add_images(key, value)
             self.writer.save_images(self.save_current_results())
 

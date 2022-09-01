@@ -509,7 +509,7 @@ def center_crop_tensor(img, size):
 class LoL_Dataset_wo_opt_train(data.Dataset):
     def __init__(self, data_root='/data1/liguanlin/Datasets/lowlight/our485/',mask_config={}, data_len=-1, image_size=[256, 256], loader=pil_loader):
         self.root = data_root
-        self.concat_histeq = False
+        self.concat_histeq = True
         self.histeq_as_input = False
         self.log_low = True
         self.use_flip = True
@@ -590,12 +590,12 @@ class LoL_Dataset_wo_opt_train(data.Dataset):
 class LoL_Dataset_wo_opt_test(data.Dataset):
     def __init__(self, data_root='/data1/liguanlin/Datasets/lowlight/eval15/',mask_config={}, data_len=-1, image_size=[256, 256], loader=pil_loader):
         self.root = data_root
-        self.concat_histeq = False
+        self.concat_histeq = True
         self.histeq_as_input = False
         self.log_low = True
-        self.use_flip = True
+        self.use_flip = False
         self.use_rot = False
-        self.use_crop = True
+        self.use_crop = False
         self.use_noise = False
         self.noise_prob = None
         self.noise_level = 5
