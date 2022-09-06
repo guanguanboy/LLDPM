@@ -136,7 +136,7 @@ class LLDPM(BaseModel):
                         self.output, self.visuals = self.netG.module.restoration(self.cond_image, sample_num=self.sample_num)
                 else:
                     if self.task in ['inpainting','uncropping']:
-                        self.output, self.visuals = self.netG.restoration(self.cond_image, y_t=self.cond_image, 
+                        self.output, self.visuals = self.netG.restoration(self.cond_image, y_t=None, 
                             y_0=self.gt_image, sample_num=self.sample_num)
                     else:
                         self.output, self.visuals = self.netG.restoration(self.cond_image, sample_num=self.sample_num)
